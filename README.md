@@ -1,6 +1,8 @@
 # msbuild-issue
 Demonstrating issues with msbuild with @ in path names
 
+Issue https://github.com/dotnet/msbuild/issues/8104
+
 This is a cut down version of the MSBuild files used by Grpc.Tools based projects
 to demonstate the issue https://github.com/grpc/grpc/issues/30746
 
