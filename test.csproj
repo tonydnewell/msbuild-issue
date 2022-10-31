@@ -1,0 +1,88 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="MyTarget">
+
+    <!-- This is a cut down version of the MSBuild files used by Grpc.Tools based projects
+       to demonstate the issue https://github.com/grpc/grpc/issues/30746
+
+       All gRPC and protobuf compiler tasks and logic have been removed and the outputs mocked
+       below to simplify and demonstate a possible bug in MSBuild.
+       Original MSBuild files are in:
+       https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Tools/build/_protobuf/Google.Protobuf.Tools.targets
+
+       Issue:
+       If a directory path contains the '@' character then the <FilesToCompile> item list
+       is wrong - it misses out the files with '@' in their paths.
+
+       Two 'workarounds' are included <Workaround1> and <Workaround2> - using qualified metadata.
+       But this adds a different behaviour to the MSBuild batching. The unqualified metadata
+       should work.
+
+       If the directory '@myfiles' is renamed to 'myfiles' and the mocked data in
+       <Protobuf_ExpectedOutputs> also edited to remove the '@' then it behaves as expected
+
+      -->
+
+    <ItemGroup>
+
+      <!-- Find the two .proto files - one in the current dir and one in the myfiles dir -->
+      <Protobuf_Compile Include="**\*.proto">
+      </Protobuf_Compile>
+
+      <!-- Add Source and CompileOutputs metadata to each one -->
+      <Protobuf_Compile>
+        <Source>%(Identity)</Source>
+        <CompileOutputs>True</CompileOutputs>
+      </Protobuf_Compile>
+
+      <!-- Mock the generated files from the protobuf compiler.
+          Two files generated from each .proto file
+          The Source specifies the associated .proto file
+        -->
+      <Protobuf_ExpectedOutputs Include="obj\Debug\net45\@myfiles\Other.cs" >
+		    <Source>@myfiles\other.proto</Source>
+	    </Protobuf_ExpectedOutputs>
+	    <Protobuf_ExpectedOutputs Include="obj\Debug\net45\@myfiles\OtherGrpc.cs" >
+		    <Source>@myfiles\other.proto</Source>
+	    </Protobuf_ExpectedOutputs>
+
+      <Protobuf_ExpectedOutputs Include="obj\Debug\net45\Testcodegen.cs" >
+		    <Source>testcodegen.proto</Source>
+	    </Protobuf_ExpectedOutputs>
+      <Protobuf_ExpectedOutputs Include="obj\Debug\net45\TestcodegenGrpc.cs" >
+		    <Source>testcodegen.proto</Source>
+	    </Protobuf_ExpectedOutputs>
+
+      <!-- This is what works out the files to compile -->
+      <FileToCompile Include="@(Protobuf_ExpectedOutputs)"
+          Condition=" %(Source) != '' and '@(Protobuf_Compile->WithMetadataValue('CompileOutputs', 'true'))' != '' " />
+
+      <Workaround1 Include="@(Protobuf_ExpectedOutputs)"
+          Condition=" %(Protobuf_Compile.Source) != '' and '@(Protobuf_Compile->WithMetadataValue('CompileOutputs', 'true'))' != '' " />
+
+      <Workaround2 Include="@(Protobuf_ExpectedOutputs)"
+          Condition=" %(Protobuf_ExpectedOutputs.Source) != '' and '@(Protobuf_Compile->WithMetadataValue('CompileOutputs', 'true'))' != '' " />
+          
+    </ItemGroup>
+
+    <Message Importance="high" Text="========== Input Items ==========%0a" />
+    <Message Importance="high" Text="%0a***** Protobuf_Compile items (2 expected)" />
+    <Message Importance="high" Text="Protobuf_Compile = @(Protobuf_Compile->'    Identity=%(Identity) Source=%(Source) CompileOutputs=%(CompileOutputs)','%0a')" />
+
+    <Message Importance="high" Text="%0a***** Protobuf_ExpectedOutputs items (4 expected)" />
+    <Message Importance="high" Text="Protobuf_ExpectedOutputs = @(Protobuf_ExpectedOutputs->'    Identity=%(Identity) Source=%(Source)','%0a')" />
+
+    <Message Importance="high" Text="%0a========== Output Items ==========%0a" />
+    <Message Importance="high" Text="%0a***** Expected files to compile - should be 4 distinct files" />
+    <Message Importance="high" Text="*****   However when dir name starts with a '@' then we only see 2 files" />
+    <Message Importance="high" Text="FilesToCompile = @(FileToCompile->'    Identity=%(Identity) Source=%(Source)','%0a')" />
+
+    <Message Importance="high" Text="%0a***** Workaround 1 - using 'Protobuf_Compile.Source' in Condition" />
+    <Message Importance="high" Text="*****   However produces duplicate files - could add Distinct()" />
+    <Message Importance="high" Text="Workaround1 = @(Workaround1->'    Identity=%(Identity) Source=%(Source)','%0a')" />
+
+    <Message Importance="high" Text="%0a***** Workaround 2 - using 'Protobuf_ExpectedOutputs.Source' in Condition (this is OK)" />
+    <Message Importance="high" Text="Workaround2 = @(Workaround2->'    Identity=%(Identity) Source=%(Source)','%0a')" />
+
+  </Target>
+</Project>

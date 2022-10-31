@@ -1,0 +1,54 @@
+E:\work\grpc\issues\is30746\msbuildtest>msbuild
+Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 31/10/2022 12:21:00.
+Project "E:\work\grpc\issues\is30746\msbuildtest\test.csproj" on node 1 (default targets).
+MyTarget:
+  ========== Input Items ==========
+
+
+  ***** Protobuf_Compile items (2 expected)
+  Protobuf_Compile =     Identity=myfiles\other.proto Source=myfiles\other.proto CompileOutputs=True
+      Identity=testcodegen.proto Source=testcodegen.proto CompileOutputs=True
+
+  ***** Protobuf_ExpectedOutputs items (4 expected)
+  Protobuf_ExpectedOutputs =     Identity=obj\Debug\net45\myfiles\Other.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\myfiles\OtherGrpc.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\Testcodegen.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\TestcodegenGrpc.cs Source=testcodegen.proto
+
+  ========== Output Items ==========
+
+
+  ***** Expected files to compile - should be 4 distinct files
+  *****   However when dir name starts with a '@' then we only see 2 files
+  FilesToCompile =     Identity=obj\Debug\net45\myfiles\Other.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\myfiles\OtherGrpc.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\Testcodegen.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\TestcodegenGrpc.cs Source=testcodegen.proto
+
+  ***** Workaround 1 - using 'Protobuf_Compile.Source' in Condition
+  *****   However produces duplicate files - could add Distinct()
+  Workaround1 =     Identity=obj\Debug\net45\myfiles\Other.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\myfiles\OtherGrpc.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\Testcodegen.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\TestcodegenGrpc.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\myfiles\Other.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\myfiles\OtherGrpc.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\Testcodegen.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\TestcodegenGrpc.cs Source=testcodegen.proto
+
+  ***** Workaround 2 - using 'Protobuf_ExpectedOutputs.Source' in Condition (this is OK)
+  Workaround2 =     Identity=obj\Debug\net45\myfiles\Other.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\myfiles\OtherGrpc.cs Source=myfiles\other.proto
+      Identity=obj\Debug\net45\Testcodegen.cs Source=testcodegen.proto
+      Identity=obj\Debug\net45\TestcodegenGrpc.cs Source=testcodegen.proto
+Done Building Project "E:\work\grpc\issues\is30746\msbuildtest\test.csproj" (default targets).
+
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.09
